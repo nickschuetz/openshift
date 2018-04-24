@@ -152,7 +152,6 @@ openshift_prometheus_node_selector={"region":"infra"}
 # An NFS volume will be created with path "nfs_directory/volume_name"
 # on the host within the [nfs] host group.  For example, the volume
 # path using these options would be "/exports/prometheus"
-#openshift_prometheus_storage_kind=nfs
 openshift_prometheus_storage_access_modes=['ReadWriteOnce']
 openshift_prometheus_storage_volume_name=prometheus
 openshift_prometheus_storage_volume_size=10Gi
