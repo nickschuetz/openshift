@@ -1,0 +1,221 @@
+# This is an example of a bring your own (byo) host inventory
+
+# Create an OSEv3 group that contains the masters and nodes groups
+[OSEv3:children]
+masters
+etcd
+nodes
+nfs
+glusterfs
+
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+# Disable installer health checks
+openshift_disable_check=disk_availability,memory_availability
+
+## this is required otherwise it will fail openshift_sanitize_inventory
+### cloud provider is not configured but dynamic is set
+dynamic_volumes_check=False
+
+
+# SSH user, this user should allow ssh based auth without requiring a
+# password. If using ssh key based auth, then the key should be managed by an
+# ssh agent.
+ansible_ssh_user=root
+
+# If ansible_ssh_user is not root, ansible_become must be set to true and the
+# user must be configured for passwordless sudo
+#ansible_become=yes
+
+# Debug level for all OpenShift components (Defaults to 2)
+#debug_level=3
+
+# Specify the deployment type. Valid values are origin and openshift-enterprise.
+openshift_deployment_type=openshift-enterprise
+
+# Specify the generic release of OpenShift to install. This is used mainly just during installation, after which we
+# rely on the version running on the first master. Works best for containerized installs where we can usually
+# use this to lookup the latest exact version of the container images, which is the tag actually used to configure
+# the cluster. For RPM installations we just verify the version detected in your configured repos matches this
+# release.
+openshift_release=v3.9
+
+# htpasswd auth
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+# Defining htpasswd users
+#openshift_master_htpasswd_users={'user1': '<pre-hashed password>', 'user2': '<pre-hashed password>'}
+# or
+#openshift_master_htpasswd_file=<path to local pre-generated htpasswd file>
+
+# Enable cockpit
+osm_use_cockpit=true
+#
+# Set cockpit plugins
+osm_cockpit_plugins=['cockpit-kubernetes']
+
+# Native high availability cluster method with optional load balancer.
+# If no lb group is defined, the installer assumes that a load balancer has
+# been preconfigured. For installation the value of
+# openshift_master_cluster_hostname must resolve to the load balancer
+# or to one or all of the masters defined in the inventory if no load
+# balancer is present.
+openshift_master_cluster_method=native
+openshift_master_cluster_hostname=ocp.example.com
+openshift_master_cluster_public_hostname=ocp.example.com
+
+# default subdomain to use for exposed routes
+openshift_master_default_subdomain=ocp.example.com
+
+# default project node selector
+osm_default_node_selector='region=primary'
+
+# OpenShift Router Options
+#
+# An OpenShift router will be created during install if there are
+# nodes present with labels matching the default router selector,
+# "region=infra". Set openshift_node_labels per node as needed in
+# order to label nodes.
+#
+# Example:
+# [nodes]
+# node.example.com openshift_node_labels="{'region': 'infra'}"
+#
+# Router selector (optional)
+# Router will only be created if nodes matching this label are present.
+# Default value: 'region=infra'
+openshift_hosted_router_selector='region=infra'
+#
+
+# CNS Storage
+openshift_storage_glusterfs_namespace=storage
+openshift_storage_glusterfs_storageclass=true
+openshift_storage_glusterfs_storageclass_default=false
+openshift_storage_glusterfs_block_deploy=true
+openshift_storage_glusterfs_block_host_vol_size=100
+openshift_storage_glusterfs_block_storageclass=true
+openshift_storage_glusterfs_block_storageclass_default=false
+openshift_storage_glusterfs_heketi_wipe=True
+openshift_storage_glusterfs_wipe=True
+
+openshift_storageclass_default=false
+
+
+# Openshift Registry Options
+#
+# An OpenShift registry will be created during install if there are
+# nodes present with labels matching the default registry selector,
+# "region=infra". Set openshift_node_labels per node as needed in
+# order to label nodes.
+#
+# Example:
+# [nodes]
+# node.example.com openshift_node_labels="{'region': 'infra'}"
+#
+# Registry selector (optional)
+# Registry will only be created if nodes matching this label are present.
+# Default value: 'region=infra'
+openshift_hosted_registry_selector='region=infra'
+
+# Registry Storage Options
+#
+# Registry Storage
+#
+openshift_hosted_manage_registry=true
+openshift_hosted_registry_storage_kind=glusterfs
+openshift_hosted_registry_storage_volume_name=registry
+openshift_hosted_registry_storage_volume_size=50Gi
+
+
+# Metrics deployment
+# See: https://docs.openshift.com/enterprise/latest/install_config/cluster_metrics.html
+
+# metrics
+openshift_metrics_install_metrics=true
+openshift_metrics_storage_kind=dynamic
+openshift_metrics_storage_volume_name=metrics
+openshift_metrics_storage_volume_size='50Gi'
+openshift_metrics_cassanda_pvc_storage_class_name="glusterfs-storage-block"
+openshift_metrics_duration=7
+openshift_metrics_cassandra_requests_memory=2G
+openshift_metrics_hawkular_nodeselector={'region':'infra'}
+openshift_metrics_cassandra_nodeselector={'region':'infra'}
+
+
+# Logging deployment
+#
+openshift_logging_install_logging=true
+openshift_logging_storage_volume_size=50G
+openshift_logging_es_pvc_dynamic=true
+openshift_logging_es_pvc_storage_class_name="glusterfs-storage-block"
+openshift_logging_es_memory_limit=4G
+openshift_logging_kibana_nodeselector={'region':'infra'}
+openshift_logging_curator_nodeselector={'region':'infra'}
+openshift_logging_es_nodeselector={'region':'infra'}
+#openshift_logging_fluentd_nodeselector=''
+
+# Configure the multi-tenant SDN plugin (default is 'redhat/openshift-ovs-subnet')
+# os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+# os_sdn_network_plugin_name='redhat/openshift-ovs-networkpolicy'
+
+# Configure SDN cluster network and kubernetes service CIDR blocks. These
+# network blocks should be private and should not conflict with network blocks
+# in your infrastructure that pods may require access to. Can not be changed
+# after deployment.
+#
+# WARNING : Do not pick subnets that overlap with the default Docker bridge subnet of
+# 172.17.0.0/16.  Your installation will fail and/or your configuration change will
+# cause the Pod SDN or Cluster SDN to fail.
+#
+# WORKAROUND : If you must use an overlapping subnet, you can configure a non conflicting
+# docker0 CIDR range by adding '--bip=192.168.2.1/24' to DOCKER_NETWORK_OPTIONS
+# environment variable located in /etc/sysconfig/docker-network.
+osm_cluster_network_cidr=10.128.0.0/14
+openshift_portal_net=172.30.0.0/16
+
+# Global Proxy Configuration
+## These options configure HTTP_PROXY, HTTPS_PROXY, and NOPROXY environment
+# variables for docker and master services.
+#
+# Hosts in the openshift_no_proxy list will NOT use any globally
+# configured HTTP(S)_PROXYs. openshift_no_proxy accepts domains
+# (.example.com), hosts (example.com), and IP addresses.
+#openshift_http_proxy=http://USER:PASSWORD@IPADDR:PORT
+#openshift_https_proxy=https://USER:PASSWORD@IPADDR:PORT
+#openshift_no_proxy='.hosts.example.com,some-host.com'
+
+# Disable the Service Catalog
+#openshift_enable_service_catalog=false
+#
+# Ansible Service Broker
+openshift_hosted_etcd_storage_kind=nfs
+openshift_hosted_etcd_storage_nfs_options="*(rw,root_squash,sync,no_wdelay)"
+openshift_hosted_etcd_storage_nfs_directory=/exports
+openshift_hosted_etcd_storage_volume_name=etcd-vol2
+openshift_hosted_etcd_storage_access_modes=["ReadWriteOnce"]
+openshift_hosted_etcd_storage_volume_size=10G
+openshift_hosted_etcd_storage_labels={'storage': 'etcd'}
+
+
+[nfs]
+master1.example.com
+
+# host group for masters
+[masters]
+master1.example.com openshift_schedulable=true
+
+[etcd]
+master1.example.com openshift_schedulable=true
+
+# NOTE: Currently we require that masters be part of the SDN which requires that they also be nodes
+# However, in order to ensure that your masters are not burdened with running pods you should
+# make them unschedulable by adding openshift_schedulable=False any node that's also a master.
+[nodes]
+master1.example.com openshift_node_labels="{'region': 'infra', 'zone': 'default', 'logging-infra-fluentd': 'true'}" openshift_schedulable=true
+node[1:3].example.com openshift_node_labels="{'region': 'primary', 'zone': 'default', 'logging-infra-fluentd': 'true', 'role': 'compute'}" openshift_schedulable=true
+
+
+[glusterfs]
+node1.example.com glusterfs_ip=192.168.0.71 glusterfs_devices='[ "/dev/vdc" ]'
+node2.example.com glusterfs_ip=192.168.0.72 glusterfs_devices='[ "/dev/vdc" ]'
+node3.example.com glusterfs_ip=192.168.0.73 glusterfs_devices='[ "/dev/vdc" ]'
