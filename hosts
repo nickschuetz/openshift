@@ -5,7 +5,6 @@
 masters
 etcd
 nodes
-nfs
 glusterfs
 
 
@@ -90,7 +89,7 @@ openshift_hosted_router_selector='region=infra'
 # CNS Storage
 openshift_storage_glusterfs_namespace=storage
 openshift_storage_glusterfs_storageclass=true
-openshift_storage_glusterfs_storageclass_default=false
+openshift_storage_glusterfs_storageclass_default=true
 openshift_storage_glusterfs_block_deploy=true
 openshift_storage_glusterfs_block_host_vol_size=100
 openshift_storage_glusterfs_block_storageclass=true
@@ -141,6 +140,40 @@ openshift_metrics_cassandra_requests_memory=2G
 openshift_metrics_hawkular_nodeselector={'region':'infra'}
 openshift_metrics_cassandra_nodeselector={'region':'infra'}
 
+# Prometheus deployment
+#
+# Currently prometheus deployment is disabled by default, enable it by setting this
+openshift_hosted_prometheus_deploy=true
+openshift_prometheus_namespace=openshift-metrics
+openshift_prometheus_node_selector={"region":"infra"}
+
+# Prometheus storage config
+# Option A - NFS Host Group
+# An NFS volume will be created with path "nfs_directory/volume_name"
+# on the host within the [nfs] host group.  For example, the volume
+# path using these options would be "/exports/prometheus"
+#openshift_prometheus_storage_kind=nfs
+openshift_prometheus_storage_access_modes=['ReadWriteOnce']
+openshift_prometheus_storage_volume_name=prometheus
+openshift_prometheus_storage_volume_size=10Gi
+openshift_prometheus_storage_type='pvc'
+openshift_prometheus_sc_name="glusterfs-storage"
+
+# For prometheus-alertmanager
+openshift_prometheus_alertmanager_storage_access_modes=['ReadWriteOnce']
+openshift_prometheus_alertmanager_storage_volume_name=prometheus-alertmanager
+openshift_prometheus_alertmanager_storage_volume_size=10Gi
+openshift_prometheus_alertmanager_storage_type='pvc'
+openshift_prometheus_alertmanager_sc_name="glusterfs-storage"
+
+# For prometheus-alertbuffer
+openshift_prometheus_alertbuffer_storage_access_modes=['ReadWriteOnce']
+openshift_prometheus_alertbuffer_storage_volume_name=prometheus-alertbuffer
+openshift_prometheus_alertbuffer_storage_volume_size=10Gi
+openshift_prometheus_alertbuffer_storage_type='pvc'
+openshift_prometheus_alertbuffer_sc_name="glusterfs-storage"
+
+openshift_prometheus_node_exporter_image_version=v3.9.14
 
 # Logging deployment
 #
@@ -188,17 +221,12 @@ openshift_portal_net=172.30.0.0/16
 #openshift_enable_service_catalog=false
 #
 # Ansible Service Broker
-openshift_hosted_etcd_storage_kind=nfs
-openshift_hosted_etcd_storage_nfs_options="*(rw,root_squash,sync,no_wdelay)"
-openshift_hosted_etcd_storage_nfs_directory=/exports
+openshift_hosted_etcd_storage_kind=dynamic
 openshift_hosted_etcd_storage_volume_name=etcd-vol2
 openshift_hosted_etcd_storage_access_modes=["ReadWriteOnce"]
 openshift_hosted_etcd_storage_volume_size=10G
-openshift_hosted_etcd_storage_labels={'storage': 'etcd'}
+ansible_service_broker_local_registry_whitelist=['.*-apb$']
 
-
-[nfs]
-master1.example.com
 
 # host group for masters
 [masters]
