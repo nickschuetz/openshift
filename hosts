@@ -41,6 +41,7 @@ openshift_deployment_type=openshift-enterprise
 # the cluster. For RPM installations we just verify the version detected in your configured repos matches this
 # release.
 openshift_release=v3.9
+oreg_url=registry.access.redhat.com/openshift3/ose-${component}:${version}
 
 # htpasswd auth
 openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
