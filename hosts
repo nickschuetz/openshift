@@ -13,6 +13,12 @@ glusterfs
 # Disable installer health checks
 openshift_disable_check=disk_availability,memory_availability
 
+# Turn on CRI-O Support
+#openshift_use_crio=true
+#openshift_crio_use_rpm=true
+#openshift_crio_enable_docker_gc=true
+#openshift_crio_docker_gc_node_selector={'runtime': 'cri-o'}
+
 openshift_clock_enabled=true
 
 ## this is required otherwise it will fail openshift_sanitize_inventory
