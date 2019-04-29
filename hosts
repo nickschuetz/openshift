@@ -11,6 +11,9 @@ glusterfs
 # Set variables common for all OSEv3 hosts
 [OSEv3:vars]
 
+# Enable Tech Preview Operator Framework
+openshift_enable_olm=true
+
 # Disable installer health checks for non-prod environments
 openshift_disable_check=disk_availability,memory_availability,docker_image_availability
 
